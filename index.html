@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tekanan Zat Padat | MTsN 1 Kota Malang</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#059669', // Emerald 600
+                        secondary: '#10b981', // Emerald 500
+                        dark: '#064e3b', // Emerald 900
+                        light: '#ecfdf5', // Emerald 50
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; overflow-x: hidden; }
+        .fade-in { animation: fadeIn 0.4s ease-in-out; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .page-content { display: none; }
+        .page-content.active { display: block; animation: fadeIn 0.5s; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #10b981; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #059669; }
+
+        /* Equation Styling */
+        .equation {
+            display: inline-flex; align-items: center; justify-content: center;
+            font-family: 'Courier New', Courier, monospace; font-size: 1.25rem; font-weight: bold;
+        }
+        .fraction { display: flex; flex-direction: column; align-items: center; margin: 0 0.5rem; }
+        .numerator { border-bottom: 2px solid #1f2937; padding: 0 0.2rem; }
+        .denominator { padding: 0 0.2rem; }
+
+        /* Game specific */
+        #game-area { position: relative; width: 100%; height: 300px; background: #e0f2fe; border-radius: 12px; overflow: hidden; border: 4px solid #bae6fd;}
+        .ice-block { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 150px; height: 100px; background: rgba(255,255,255,0.8); border: 2px solid #7dd3fc; border-radius: 8px; text-align: center; line-height: 100px; font-weight: bold; color: #0284c7; box-shadow: inset 0 0 20px #bae6fd; transition: all 0.2s;}
+        .tool { position: absolute; top: -100px; left: 50%; transform: translateX(-50%); transition: top 0.3s ease-in;}
+        .cracked { background-image: linear-gradient(45deg, transparent 45%, #7dd3fc 45%, #7dd3fc 55%, transparent 55%); }
+        .broken { display: none; }
+    </style>
+</head>
+<body class="text-gray-800 h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-primary text-white shadow-lg z-10 relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-microscope text-3xl text-light"></i>
+                    <div>
+                        <h1 class="text-xl md:text-2xl font-bold tracking-tight">Tekanan Zat Padat</h1>
+                        <p class="text-xs md:text-sm text-emerald-200">Disusun oleh Alpan Ibrahim S.Si. | MTsN 1 Kota Malang</p>
+                    </div>
+                </div>
+                <!-- Mobile Menu Button -->
+                <button id="mobile-menu-btn" class="md:hidden text-white hover:text-emerald-200 focus:outline-none">
+                    <i class="fas fa-bars text-2xl"></i>
+                </button>
+            </div>
+        </div>
+        <!-- Desktop Nav -->
+        <nav class="hidden md:block bg-dark">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex space-x-1">
+                    <button onclick="navigate('home')" class="nav-btn bg-emerald-700 px-4 py-3 text-sm font-medium hover:bg-emerald-600 transition flex items-center" data-target="home"><i class="fas fa-home mr-2"></i> Beranda</button>
+                    <button onclick="navigate('materi')" class="nav-btn px-4 py-3 text-sm font-medium hover:bg-emerald-600 transition flex items-center" data-target="materi"><i class="fas fa-book-open mr-2"></i> Materi Lengkap</button>
+                    <button onclick="navigate('lab')" class="nav-btn px-4 py-3 text-sm font-medium hover:bg-emerald-600 transition flex items-center" data-target="lab"><i class="fas fa-flask mr-2"></i> Virtual Lab</button>
+                    <button onclick="navigate('game')" class="nav-btn px-4 py-3 text-sm font-medium hover:bg-emerald-600 transition flex items-center" data-target="game"><i class="fas fa-gamepad mr-2"></i> Game Seru</button>
+                    <button onclick="navigate('quiz')" class="nav-btn px-4 py-3 text-sm font-medium hover:bg-emerald-600 transition flex items-center" data-target="quiz"><i class="fas fa-tasks mr-2"></i> Kuis (20 Soal)</button>
+                </div>
+            </div>
+        </nav>
+        <!-- Mobile Nav -->
+        <nav id="mobile-nav" class="hidden md:hidden bg-dark">
+            <div class="flex flex-col px-2 pt-2 pb-3 space-y-1">
+                <button onclick="navigate('home'); toggleMobileMenu()" class="nav-btn text-left px-3 py-2 rounded-md text-base font-medium hover:bg-emerald-600 transition"><i class="fas fa-home mr-2"></i> Beranda</button>
+                <button onclick="navigate('materi'); toggleMobileMenu()" class="nav-btn text-left px-3 py-2 rounded-md text-base font-medium hover:bg-emerald-600 transition"><i class="fas fa-book-open mr-2"></i> Materi Lengkap</button>
+                <button onclick="navigate('lab'); toggleMobileMenu()" class="nav-btn text-left px-3 py-2 rounded-md text-base font-medium hover:bg-emerald-600 transition"><i class="fas fa-flask mr-2"></i> Virtual Lab</button>
+                <button onclick="navigate('game'); toggleMobileMenu()" class="nav-btn text-left px-3 py-2 rounded-md text-base font-medium hover:bg-emerald-600 transition"><i class="fas fa-gamepad mr-2"></i> Game Seru</button>
+                <button onclick="navigate('quiz'); toggleMobileMenu()" class="nav-btn text-left px-3 py-2 rounded-md text-base font-medium hover:bg-emerald-600 transition"><i class="fas fa-tasks mr-2"></i> Kuis (20 Soal)</button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow overflow-y-auto">
+        
+        <!-- HOME PAGE -->
+        <section id="home" class="page-content active max-w-5xl mx-auto px-4 py-8">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col md:flex-row">
+                <div class="p-8 md:w-1/2 flex flex-col justify-center">
+                    <span class="text-primary font-bold tracking-wider uppercase text-sm mb-2">Selamat Datang Sobat Sains!</span>
+                    <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4">Eksplorasi Misteri Tekanan Zat Padat</h2>
+                    <p class="text-gray-600 mb-6 leading-relaxed">
+                        Pernahkah kamu berpikir kenapa pisau yang tajam lebih mudah memotong apel? Atau kenapa ayam kesulitan berjalan di lumpur sementara bebek melenggang santai? Jawabannya ada di Fisika!
+                    </p>
+                    <div class="flex flex-wrap gap-4">
+                        <button onclick="navigate('materi')" class="bg-primary hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition transform hover:-translate-y-1">Mulai Belajar <i class="fas fa-arrow-right ml-2"></i></button>
+                    </div>
+                </div>
+                <div class="md:w-1/2 bg-light p-8 flex items-center justify-center">
+                    <!-- Custom SVG Illustration -->
+                    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" class="w-full h-auto max-w-xs drop-shadow-2xl">
+                        <path fill="#10B981" d="M44.7,-76.4C58.9,-69.2,71.8,-59.1,81.1,-46.3C90.4,-33.5,96,-18,95.5,-2.9C95,12.2,88.5,27.1,78.2,39.1C67.9,51.1,53.8,60.3,38.9,67.3C24,74.3,8.3,79.2,-6.7,77.5C-21.7,75.8,-35.9,67.6,-49.2,58.1C-62.5,48.6,-74.9,37.8,-82.1,23.5C-89.3,9.2,-91.3,-8.6,-86.3,-24.1C-81.3,-39.6,-69.3,-52.8,-55.4,-60.1C-41.5,-67.4,-25.7,-68.8,-11.1,-71.4C3.5,-74,18,-77.8,30.5,-78.7C43,-79.6,30.5,-83.6,44.7,-76.4Z" transform="translate(100 100)" />
+                        <!-- Block -->
+                        <rect x="70" y="60" width="60" height="40" fill="#f59e0b" rx="4"/>
+                        <rect x="75" y="65" width="50" height="30" fill="#fbbf24" rx="2"/>
+                        <!-- Force Arrow -->
+                        <path d="M100 20 L100 55 M90 45 L100 55 L110 45" stroke="#ef4444" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                        <text x="100" y="15" text-anchor="middle" font-family="sans-serif" font-weight="bold" fill="#ef4444" font-size="16">F (Gaya)</text>
+                        <!-- Area text -->
+                        <path d="M70 110 L130 110 M70 105 L70 115 M130 105 L130 115" stroke="#2563eb" stroke-width="2" fill="none"/>
+                        <text x="100" y="130" text-anchor="middle" font-family="sans-serif" font-weight="bold" fill="#2563eb" font-size="14">A (Luas Alas)</text>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-start space-x-4">
+                    <div class="bg-blue-100 p-3 rounded-lg text-blue-600"><i class="fas fa-brain text-xl"></i></div>
+                    <div><h3 class="font-bold text-gray-800">Konsep Mendalam</h3><p class="text-sm text-gray-500 mt-1">Bukan sekadar rumus, pahami maknanya dalam kehidupan nyata.</p></div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-start space-x-4">
+                    <div class="bg-emerald-100 p-3 rounded-lg text-emerald-600"><i class="fas fa-mosque text-xl"></i></div>
+                    <div><h3 class="font-bold text-gray-800">Integrasi Islam</h3><p class="text-sm text-gray-500 mt-1">Kaitan antara hukum fisika dengan hikmah kehidupan Islami.</p></div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-start space-x-4">
+                    <div class="bg-purple-100 p-3 rounded-lg text-purple-600"><i class="fas fa-gamepad text-xl"></i></div>
+                    <div><h3 class="font-bold text-gray-800">Belajar Seru</h3><p class="text-sm text-gray-500 mt-1">Simulasi lab dan game interaktif yang anti-membosankan.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- MATERI PAGE -->
+        <section id="materi" class="page-content max-w-4xl mx-auto px-4 py-8">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden p-6 md:p-10 relative">
+                <!-- Pagination Tabs -->
+                <div class="flex border-b border-gray-200 mb-6 overflow-x-auto">
+                    <button onclick="showMateriPage(1)" id="tab-mat-1" class="mat-tab py-2 px-4 text-primary border-b-2 border-primary font-semibold whitespace-nowrap">1. Dasar Tekanan</button>
+                    <button onclick="showMateriPage(2)" id="tab-mat-2" class="mat-tab py-2 px-4 text-gray-500 hover:text-primary transition whitespace-nowrap">2. Fenomena Harian</button>
+                    <button onclick="showMateriPage(3)" id="tab-mat-3" class="mat-tab py-2 px-4 text-gray-500 hover:text-primary transition whitespace-nowrap">3. Tekanan Lanjutan (Analisis)</button>
+                    <button onclick="showMateriPage(4)" id="tab-mat-4" class="mat-tab py-2 px-4 text-gray-500 hover:text-primary transition whitespace-nowrap flex items-center"><i class="fas fa-star text-yellow-400 mr-2"></i> Integrasi Sains & Islam</button>
+                </div>
+
+                <!-- Page 1: Dasar -->
+                <div id="mat-page-1" class="mat-content fade-in">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Apa itu Tekanan Zat Padat?</h2>
+                    <p class="mb-4 text-gray-700 leading-relaxed">
+                        Bayangkan kamu berjalan di atas salju tebal menggunakan sepatu kets biasa. Kakimu pasti akan terperosok dalam, kan? Tapi kalau kamu memakai sepatu papan salju (snowboard) yang lebar, kamu bisa berdiri stabil tanpa tenggelam. Ajaib? Tidak, itu adalah efek dari <strong>Tekanan</strong>!
+                    </p>
+                    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded-r-lg">
+                        <p class="text-blue-800"><strong>Definisi:</strong> Tekanan (P) adalah besarnya gaya (F) yang bekerja pada suatu luasan bidang tekan (A).</p>
+                    </div>
+                    
+                    <div class="flex flex-col md:flex-row items-center justify-center bg-gray-50 p-6 rounded-xl mb-6 shadow-inner">
+                        <div class="equation text-gray-800 mr-8">
+                            P = 
+                            <div class="fraction">
+                                <span class="numerator">F</span>
+                                <span class="denominator">A</span>
+                            </div>
+                        </div>
+                        <ul class="text-sm text-gray-600 list-none space-y-2">
+                            <li><i class="fas fa-arrow-right text-primary mr-2"></i><strong>P</strong> = Tekanan (Pascal atau N/m²)</li>
+                            <li><i class="fas fa-arrow-right text-primary mr-2"></i><strong>F</strong> = Gaya (Newton)</li>
+                            <li><i class="fas fa-arrow-right text-primary mr-2"></i><strong>A</strong> = Luas Permukaan Bidang Tekan (m²)</li>
+                        </ul>
+                    </div>
+
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">Rahasia Tekanan:</h3>
+                    <ul class="list-disc pl-6 text-gray-700 space-y-2">
+                        <li><strong>Gaya (F) berbanding LURUS dengan Tekanan.</strong> Semakin besar gaya dorongmu, tekanannya makin besar. (Anak gajah menginjakmu terasa lebih sakit dibanding kucing yang menginjakmu).</li>
+                        <li><strong>Luas Alas (A) berbanding TERBALIK dengan Tekanan.</strong> Nah, ini kunci pentingnya! Semakin KECIL / runcing luas permukaannya, tekanan yang dihasilkan akan semakin BESAR. Sebaliknya, semakin LEBAR alasnya, tekanannya mengecil.</li>
+                    </ul>
+                </div>
+
+                <!-- Page 2: Fenomena -->
+                <div id="mat-page-2" class="mat-content fade-in hidden">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Tekanan dalam Keseharian</h2>
+                    <p class="mb-4 text-gray-700 leading-relaxed">Pernahkah kamu memperhatikan benda-benda di sekitarmu? Desain mereka dibuat sangat spesifik mengikuti hukum fisika ini lho!</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <!-- Card 1 -->
+                        <div class="border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition">
+                            <div class="text-center mb-3">
+                                <i class="fas fa-shoe-prints text-4xl text-rose-500"></i>
+                            </div>
+                            <h4 class="font-bold text-center text-gray-800">Sepatu Hak Tinggi (High Heels)</h4>
+                            <p class="text-sm text-gray-600 mt-2">
+                                Ujung hak tinggi luas permukaannya (A) sangat kecil. Akibatnya tekanannya sangat <strong>BESAR</strong>. Bayangkan jika kaki yang pakai high heels menginjak kakimu, auts! Lantai kayu pun bisa berbekas.
+                            </p>
+                        </div>
+                        <!-- Card 2 -->
+                        <div class="border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition">
+                            <div class="text-center mb-3">
+                                <img src="https://api.iconify.design/noto:duck.svg" alt="Bebek" class="h-10 mx-auto">
+                            </div>
+                            <h4 class="font-bold text-center text-gray-800">Kaki Bebek vs Ayam</h4>
+                            <p class="text-sm text-gray-600 mt-2">
+                                Bebek punya selaput di kakinya, membuat Luas Alas (A) menjadi <strong>BESAR</strong>. Tekanan tubuhnya ke lumpur jadi kecil, ia tak mudah terperosok. Beda dengan ayam yang kakinya tak berselaput.
+                            </p>
+                        </div>
+                        <!-- Card 3 -->
+                        <div class="border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition">
+                            <div class="text-center mb-3">
+                                <i class="fas fa-hammer text-4xl text-gray-600"></i>
+                            </div>
+                            <h4 class="font-bold text-center text-gray-800">Paku dan Pisau</h4>
+                            <p class="text-sm text-gray-600 mt-2">
+                                Pisau diasah agar ujungnya sangat tipis (A kecil). Saat diberi gaya kecil saja, tekanannya menjadi sangat <strong>BESAR</strong> sehingga mudah menembus apel atau daging.
+                            </p>
+                        </div>
+                        <!-- Card 4 -->
+                        <div class="border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition">
+                            <div class="text-center mb-3">
+                                <i class="fas fa-truck-monster text-4xl text-amber-600"></i>
+                            </div>
+                            <h4 class="font-bold text-center text-gray-800">Ban Mobil Off-road</h4>
+                            <p class="text-sm text-gray-600 mt-2">
+                                Ban mobil penjelajah lumpur atau traktor dibuat sangat lebar (A besar) agar mobil yang berat tidak ambles ke dalam tanah yang gembur/berlumpur.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Page 3: Lanjutan -->
+                <div id="mat-page-3" class="mat-content fade-in hidden">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Analisis Tingkat Atas: Tegangan dan Regangan</h2>
+                    <p class="mb-4 text-gray-700 leading-relaxed">
+                        Di tingkat SMA atau perkuliahan teknik, konsep tekanan pada zat padat berkembang menjadi kajian tentang mekanika bahan. Kita tak lagi hanya melihat zat padat sebagai balok utuh, tapi bagaimana benda itu <em>merespons</em> gaya yang diberikan.
+                    </p>
+                    
+                    <div class="bg-indigo-50 border-l-4 border-indigo-500 p-5 rounded-r-lg mb-6 text-gray-700 space-y-4">
+                        <div>
+                            <h4 class="font-bold text-indigo-800 text-lg">1. Tegangan (Stress, σ)</h4>
+                            <p class="text-sm">Konsepnya mirip Tekanan ($P = F / A$). Tegangan mengukur seberapa besar gaya internal yang dialami suatu material per satuan luas akibat tarikan atau dorongan luar. Jika tegangan melebihi "Kekuatan Putus" (Yield Strength) suatu material, maka material tersebut akan patah atau hancur.</p>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-indigo-800 text-lg">2. Regangan (Strain, ε)</h4>
+                            <p class="text-sm">Ketika diberi tegangan, benda padat bisa berubah bentuk (memanjang/memendek). Regangan adalah perbandingan antara pertambahan panjang ($\Delta L$) dengan panjang awalnya ($L_0$). Rumusnya: $\varepsilon = \frac{\Delta L}{L_0}$.</p>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-indigo-800 text-lg">3. Modulus Elastisitas (Modulus Young, E)</h4>
+                            <p class="text-sm">Setiap zat padat punya tingkat "kekakuan". Baja tentu lebih kaku dari karet. Modulus Young adalah rasio antara Tegangan dengan Regangan ($E = \frac{\sigma}{\varepsilon}$). Semakin besar E, benda semakin kaku dan sulit diregangkan.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-100 p-4 rounded-lg flex items-center space-x-4">
+                        <i class="fas fa-lightbulb text-yellow-500 text-3xl"></i>
+                        <p class="text-sm text-gray-700"><strong>Penerapan:</strong> Insinyur sipil menggunakan ilmu ini untuk menghitung seberapa tebal pilar beton yang dibutuhkan untuk menahan "Tekanan/Stress" jembatan agar jembatan tidak runtuh.</p>
+                    </div>
+                </div>
+
+                <!-- Page 4: Islam -->
+                <div id="mat-page-4" class="mat-content fade-in hidden">
+                    <div class="text-center mb-6">
+                        <i class="fas fa-star-and-crescent text-4xl text-primary mb-2"></i>
+                        <h2 class="text-2xl font-bold text-gray-800">Sinergi Sains dan Hikmah Islam</h2>
+                    </div>
+                    
+                    <p class="mb-4 text-gray-700 leading-relaxed text-center italic">
+                        "Agama tanpa sains itu buta, Sains tanpa agama itu lumpuh." <br> Hukum alam (Sunnatullah) merepresentasikan sifat keteraturan Sang Pencipta.
+                    </p>
+
+                    <div class="bg-gradient-to-br from-emerald-50 to-teal-100 p-6 rounded-2xl shadow-inner mb-6 relative overflow-hidden">
+                        <!-- Decorative bg -->
+                        <i class="fas fa-mosque absolute text-emerald-200 opacity-20 -bottom-10 -right-10" style="font-size: 200px;"></i>
+                        
+                        <div class="relative z-10">
+                            <h3 class="text-xl font-bold text-dark mb-3"><i class="fas fa-balance-scale mr-2"></i>Analogi Fisika dalam Kehidupan</h3>
+                            <p class="text-gray-700 mb-4 leading-relaxed">
+                                Ingat kembali rumusnya: <strong>$P = F / A$</strong>.<br>
+                                Mari kita ibaratkan:
+                                <ul class="list-none pl-4 space-y-2 mt-2 mb-4 font-semibold text-gray-800">
+                                    <li><span class="text-red-600">P (Pressure/Tekanan)</span> = Stres/Beban Pikiran dalam hidup.</li>
+                                    <li><span class="text-blue-600">F (Force/Gaya)</span> = Cobaan, masalah, atau ujian hidup.</li>
+                                    <li><span class="text-primary">A (Area/Luas Alas)</span> = Luasnya hati, kesabaran, ilmu, dan keikhlasan.</li>
+                                </ul>
+                            </p>
+                            
+                            <div class="bg-white p-4 rounded-lg shadow-sm border border-emerald-100">
+                                <p class="text-gray-700 text-sm leading-relaxed mb-3">
+                                    Semua manusia pasti mendapat <strong>Gaya/Ujian (F)</strong> yang berbeda-beda. Secara matematika, agar <strong>Tekanan Hidup (P)</strong> menjadi kecil saat ujian datang bertubi-tubi, apa yang harus kita lakukan?
+                                </p>
+                                <p class="text-center font-bold text-lg text-primary my-2">Ya! Kita harus memperbesar 'A' (Luas Hati/Kesabaran)!</p>
+                                <p class="text-gray-700 text-sm leading-relaxed">
+                                    Orang yang hatinya sempit (A kecil), sekecil apapun masalah (F) yang menimpanya, dia akan merasakan stres dan tekanan (P) yang sangat besar. Sebaliknya, orang yang senantiasa bersabar, berlapang dada, dan bertawakkal (A luas), sebesar apapun badai masalah (F), tekanannya (P) tak akan menghancurkan dirinya.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-center p-5 bg-white border border-gray-200 rounded-xl">
+                        <p class="text-xl font-arabic font-bold text-gray-800 mb-2">لَا يُكَلِّفُ اللَّهُ نَفْسًا إِلَّا وُسْعَهَا</p>
+                        <p class="text-sm text-gray-600 italic">"Allah tidak membebani seseorang melainkan sesuai dengan kesanggupannya."</p>
+                        <p class="text-xs font-semibold text-gray-500 mt-1">(QS. Al-Baqarah: 286)</p>
+                        <p class="text-sm text-gray-700 mt-3">Ayat ini adalah janji Allah bahwa batas maksimal "Tegangan" (Kekuatan Patah) spiritual manusia sudah diukur dengan sangat presisi. Gaya (ujian) yang diberikan tak akan pernah melebihi kapasitas (batas kritis) hamba-Nya.</p>
+                    </div>
+                </div>
+
+                <!-- Materi Navigation Buttons -->
+                <div class="flex justify-between mt-8 pt-4 border-t border-gray-200">
+                    <button id="btn-prev-mat" onclick="changeMateri(-1)" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-lg hidden transition"><i class="fas fa-chevron-left mr-2"></i> Sebelumnya</button>
+                    <button id="btn-next-mat" onclick="changeMateri(1)" class="bg-primary hover:bg-emerald-700 text-white font-semibold py-2 px-4 rounded-lg ml-auto transition">Selanjutnya <i class="fas fa-chevron-right ml-2"></i></button>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIRTUAL LAB PAGE -->
+        <section id="lab" class="page-content max-w-5xl mx-auto px-4 py-8">
+            <h2 class="text-3xl font-extrabold text-gray-800 mb-2 text-center">Laboratorium Virtual</h2>
+            <p class="text-center text-gray-600 mb-8">Geser slider di bawah untuk mengubah Massa (Berat) dan Luas Area balok. Amati perubahan Tekanan secara langsung!</p>
+
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col md:flex-row border border-gray-200">
+                
+                <!-- Controls -->
+                <div class="md:w-1/3 bg-gray-50 p-6 border-r border-gray-200">
+                    <h3 class="font-bold text-lg text-gray-800 mb-4 border-b pb-2"><i class="fas fa-sliders-h mr-2"></i> Panel Kontrol</h3>
+                    
+                    <!-- Mass Slider -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Massa Balok (m) = <span id="val-mass" class="text-blue-600">10</span> kg</label>
+                        <p class="text-xs text-gray-500 mb-2">Gaya Berat (F) = m × g (Anggap g = 10 m/s²)</p>
+                        <input type="range" id="slider-mass" min="1" max="100" value="10" class="w-full h-2 bg-gray-300 rounded-lg appearance-none cursor-pointer accent-blue-600">
+                    </div>
+
+                    <!-- Area Slider -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Luas Alas (A) = <span id="val-area" class="text-amber-600">2.0</span> m²</label>
+                        <p class="text-xs text-gray-500 mb-2">Lebar area kontak dengan lantai.</p>
+                        <input type="range" id="slider-area" min="0.1" max="5.0" step="0.1" value="2.0" class="w-full h-2 bg-gray-300 rounded-lg appearance-none cursor-pointer accent-amber-500">
+                    </div>
+
+                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                        <h4 class="font-bold text-gray-800 mb-2 text-center">Hasil Perhitungan:</h4>
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-sm text-gray-600">Gaya (F):</span>
+                            <span class="font-bold text-gray-800"><span id="calc-f">100</span> Newton</span>
+                        </div>
+                        <div class="flex justify-between items-center mb-2 pb-2 border-b border-blue-200">
+                            <span class="text-sm text-gray-600">Luas (A):</span>
+                            <span class="font-bold text-gray-800"><span id="calc-a">2.0</span> m²</span>
+                        </div>
+                        <div class="flex justify-between items-center mt-2">
+                            <span class="font-bold text-gray-800">Tekanan (P):</span>
+                            <span class="font-extrabold text-xl text-rose-600"><span id="calc-p">50</span> Pa</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Simulation View -->
+                <div class="md:w-2/3 p-6 relative bg-gradient-to-b from-blue-50 to-white flex flex-col justify-end items-center" style="min-height: 400px;">
+                    <!-- Indicator Meter -->
+                    <div class="absolute top-4 right-4 bg-white p-3 rounded-lg shadow border border-gray-200 text-center w-32">
+                        <span class="text-xs text-gray-500 block font-semibold">Tingkat Tekanan</span>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5 mt-1 mb-1">
+                            <div id="pressure-meter" class="bg-green-500 h-2.5 rounded-full transition-all duration-300" style="width: 10%"></div>
+                        </div>
+                        <span id="pressure-status" class="text-xs font-bold text-green-600 uppercase">Aman</span>
+                    </div>
+
+                    <!-- Environment -->
+                    <div class="relative w-full h-64 flex flex-col items-center justify-end">
+                        <!-- Block -->
+                        <div id="sim-block" class="bg-amber-800 rounded-t-sm shadow-md border-2 border-amber-900 transition-all duration-300 flex items-center justify-center relative z-10" style="width: 150px; height: 100px;">
+                            <span id="block-mass-label" class="text-white font-bold text-lg drop-shadow-md">10 kg</span>
+                        </div>
+                        <!-- Floor -->
+                        <div class="w-full h-8 bg-gray-400 relative z-0 rounded-md">
+                            <!-- Floor deformation/stress visual -->
+                            <div id="floor-stress" class="absolute top-0 left-1/2 transform -translate-x-1/2 h-full bg-red-500 opacity-0 transition-opacity duration-300" style="width: 150px; filter: blur(8px);"></div>
+                        </div>
+                    </div>
+                    
+                    <p class="text-xs text-gray-400 mt-4 text-center">*Skala dimensi pada animasi disesuaikan untuk visualisasi.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- GAME PAGE -->
+        <section id="game" class="page-content max-w-4xl mx-auto px-4 py-8">
+            <h2 class="text-3xl font-extrabold text-gray-800 mb-2 text-center">Misi: Hancurkan Es!</h2>
+            <p class="text-center text-gray-600 mb-6">Pilih alat yang tepat untuk menghasilkan <strong>Tekanan yang Cukup</strong> guna memecahkan balok es pelindung, tapi hati-hati alatnya jangan sampai salah pilih!</p>
+
+            <div class="bg-white p-6 rounded-2xl shadow-xl">
+                <!-- Status Bar -->
+                <div class="flex justify-between items-center mb-4 bg-gray-100 p-4 rounded-lg">
+                    <div>
+                        <p class="text-sm text-gray-500">Level</p>
+                        <p class="font-bold text-xl text-gray-800" id="game-level">1</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-sm text-gray-500">Target Kekuatan Es (Batas Patah)</p>
+                        <p class="font-bold text-2xl text-blue-600"><span id="game-target">500</span> Pa</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm text-gray-500">Skor</p>
+                        <p class="font-bold text-xl text-emerald-600" id="game-score">0</p>
+                    </div>
+                </div>
+
+                <!-- Main Game Canvas Area (DOM based) -->
+                <div id="game-area" class="mb-4">
+                    <!-- Target Block -->
+                    <div id="ice-block" class="ice-block">ES PELINDUNG</div>
+                    <!-- Tools -->
+                    <div id="tool-needle" class="tool text-center" style="display: none;">
+                        <i class="fas fa-syringe text-4xl text-gray-700 transform rotate-180"></i>
+                        <p class="text-xs mt-1 bg-white px-1 rounded shadow">A = 0.01 m²</p>
+                    </div>
+                    <div id="tool-hammer" class="tool text-center" style="display: none;">
+                        <i class="fas fa-hammer text-4xl text-gray-700 transform rotate-180"></i>
+                        <p class="text-xs mt-1 bg-white px-1 rounded shadow">A = 0.1 m²</p>
+                    </div>
+                    <div id="tool-stamp" class="tool text-center" style="display: none;">
+                        <i class="fas fa-weight-hanging text-4xl text-gray-700"></i>
+                        <p class="text-xs mt-1 bg-white px-1 rounded shadow">A = 1 m²</p>
+                    </div>
+                </div>
+
+                <!-- Info panel -->
+                <div class="bg-amber-50 border border-amber-200 p-4 rounded-lg mb-4 text-center">
+                    <p class="text-sm text-amber-800">Alat penumbuk memberikan <strong>Gaya (F) konstan sebesar <span id="game-force">10</span> Newton.</strong><br>Pilih alat dengan Luas Alas (A) yang menghasilkan Tekanan (P = F/A) <strong>lebih besar</strong> dari kekuatan es!</p>
+                </div>
+
+                <!-- Controls -->
+                <div class="flex justify-center space-x-4" id="game-controls">
+                    <button onclick="playTurn(0.01, 'needle')" class="bg-white border-2 border-gray-300 hover:border-blue-500 p-3 rounded-xl shadow transition flex flex-col items-center">
+                        <i class="fas fa-syringe text-2xl text-gray-600 mb-2 transform -rotate-45"></i>
+                        <span class="font-bold text-sm">Jarum</span>
+                        <span class="text-xs text-gray-500">A = 0.01 m²</span>
+                    </button>
+                    <button onclick="playTurn(0.1, 'hammer')" class="bg-white border-2 border-gray-300 hover:border-blue-500 p-3 rounded-xl shadow transition flex flex-col items-center">
+                        <i class="fas fa-hammer text-2xl text-gray-600 mb-2"></i>
+                        <span class="font-bold text-sm">Palu</span>
+                        <span class="text-xs text-gray-500">A = 0.1 m²</span>
+                    </button>
+                    <button onclick="playTurn(1, 'stamp')" class="bg-white border-2 border-gray-300 hover:border-blue-500 p-3 rounded-xl shadow transition flex flex-col items-center">
+                        <i class="fas fa-weight-hanging text-2xl text-gray-600 mb-2"></i>
+                        <span class="font-bold text-sm">Beban Datar</span>
+                        <span class="text-xs text-gray-500">A = 1 m²</span>
+                    </button>
+                </div>
+                
+                <!-- Game Message Modal overlay -->
+                <div id="game-message" class="hidden mt-4 p-4 rounded-lg text-center font-bold text-lg"></div>
+            </div>
+        </section>
+
+        <!-- QUIZ PAGE -->
+        <section id="quiz" class="page-content max-w-4xl mx-auto px-4 py-8">
+            <h2 class="text-3xl font-extrabold text-gray-800 mb-6 text-center">Kuis Tantangan (20 Soal)</h2>
+            
+            <div id="quiz-intro" class="bg-white p-8 rounded-2xl shadow-xl text-center">
+                <i class="fas fa-clipboard-list text-6xl text-primary mb-4"></i>
+                <h3 class="text-2xl font-bold text-gray-800 mb-2">Siap Menguji Pemahamanmu?</h3>
+                <p class="text-gray-600 mb-6">Kuis ini berisi 20 soal mencakup konsep dasar, perhitungan, analisis tingkat atas, dan integrasi hikmah Islam.</p>
+                <button onclick="startQuiz()" class="bg-primary hover:bg-emerald-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition transform hover:-translate-y-1 text-lg">Mulai Kuis <i class="fas fa-play ml-2"></i></button>
+            </div>
+
+            <div id="quiz-container" class="hidden bg-white p-6 md:p-10 rounded-2xl shadow-xl relative">
+                <div class="flex justify-between items-center border-b border-gray-200 pb-4 mb-6">
+                    <span class="font-semibold text-gray-500">Soal <span id="q-current">1</span> / 20</span>
+                    <span class="bg-blue-100 text-blue-800 py-1 px-3 rounded-full text-sm font-bold">Skor: <span id="q-score">0</span></span>
+                </div>
+
+                <div id="question-text" class="text-xl font-semibold text-gray-800 mb-6 leading-relaxed">
+                    Pertanyaan muncul di sini...
+                </div>
+
+                <div id="options-container" class="space-y-3">
+                    <!-- Options injected by JS -->
+                </div>
+
+                <div id="feedback-container" class="hidden mt-6 p-4 rounded-lg font-medium text-center"></div>
+
+                <div class="mt-8 text-right">
+                    <button id="btn-next-q" onclick="nextQuestion()" class="hidden bg-gray-800 hover:bg-gray-900 text-white font-bold py-2 px-6 rounded-lg transition">Soal Selanjutnya <i class="fas fa-arrow-right ml-2"></i></button>
+                </div>
+            </div>
+
+            <!-- Quiz Result -->
+            <div id="quiz-result" class="hidden bg-white p-10 rounded-2xl shadow-xl text-center">
+                <div id="result-icon" class="text-6xl mb-4"></div>
+                <h3 class="text-3xl font-bold text-gray-800 mb-2">Kuis Selesai!</h3>
+                <p class="text-gray-600 mb-4">Skor Akhir Kamu:</p>
+                <div class="text-5xl font-extrabold text-primary mb-6"><span id="final-score">100</span>%</div>
+                <p id="result-message" class="text-lg text-gray-700 italic mb-8"></p>
+                <button onclick="resetQuiz()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-6 rounded-lg transition mr-2"><i class="fas fa-redo mr-2"></i> Ulangi Kuis</button>
+                <button onclick="navigate('materi')" class="bg-primary hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-lg transition"><i class="fas fa-book-open mr-2"></i> Baca Materi Lagi</button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-6 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-sm text-gray-400">Media Ajar Interaktif © 2026</p>
+            <p class="text-base font-semibold mt-1 text-emerald-400">Disusun oleh: Alpan Ibrahim S.Si. | MTsN 1 Kota Malang</p>
+            <p class="text-xs text-gray-500 mt-2">Materi IPA Kelas 8 - Tekanan Zat Padat & Analisis Tingkat Lanjut</p>
+        </div>
+    </footer>
+
+    <script>
+        // --- NAVIGATION ---
+        function navigate(pageId) {
+            // Hide all pages
+            document.querySelectorAll('.page-content').forEach(el => el.classList.remove('active'));
+            // Show target page
+            document.getElementById(pageId).classList.add('active');
+            
+            // Update nav buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                if(btn.dataset.target === pageId) {
+                    btn.classList.add('bg-emerald-700');
+                    if(btn.closest('#mobile-nav')) btn.classList.add('bg-emerald-600');
+                } else {
+                    btn.classList.remove('bg-emerald-700');
+                    btn.classList.remove('bg-emerald-600');
+                }
+            });
+
+            // Specific page inits
+            if(pageId === 'lab') updateLab();
+            if(pageId === 'game' && currentLevel === 1) resetGame();
+            window.scrollTo(0,0);
+        }
+
+        function toggleMobileMenu() {
+            const nav = document.getElementById('mobile-nav');
+            nav.classList.toggle('hidden');
+        }
+
+        // --- MATERI PAGINATION ---
+        let currentMateriPage = 1;
+        const totalMateriPages = 4;
+
+        function showMateriPage(page) {
+            currentMateriPage = page;
+            
+            // Hide all content
+            for(let i=1; i<=totalMateriPages; i++) {
+                document.getElementById(`mat-page-${i}`).classList.add('hidden');
+                let tab = document.getElementById(`tab-mat-${i}`);
+                tab.classList.remove('text-primary', 'border-b-2', 'border-primary', 'font-semibold');
+                tab.classList.add('text-gray-500');
+            }
+
+            // Show active
+            document.getElementById(`mat-page-${page}`).classList.remove('hidden');
+            let activeTab = document.getElementById(`tab-mat-${page}`);
+            activeTab.classList.add('text-primary', 'border-b-2', 'border-primary', 'font-semibold');
+            activeTab.classList.remove('text-gray-500');
+
+            // Button logic
+            document.getElementById('btn-prev-mat').classList.toggle('hidden', page === 1);
+            
+            let btnNext = document.getElementById('btn-next-mat');
+            if(page === totalMateriPages) {
+                btnNext.innerHTML = 'Ke Virtual Lab <i class="fas fa-flask ml-2"></i>';
+                btnNext.onclick = () => navigate('lab');
+            } else {
+                btnNext.innerHTML = 'Selanjutnya <i class="fas fa-chevron-right ml-2"></i>';
+                btnNext.onclick = () => changeMateri(1);
+            }
+        }
+
+        function changeMateri(dir) {
+            let newPage = currentMateriPage + dir;
+            if(newPage >= 1 && newPage <= totalMateriPages) {
+                showMateriPage(newPage);
+            }
+        }
+
+        // Initialize Material to page 1
+        showMateriPage(1);
+
+        // --- VIRTUAL LAB ---
+        const sMass = document.getElementById('slider-mass');
+        const sArea = document.getElementById('slider-area');
+        
+        const vMass = document.getElementById('val-mass');
+        const vArea = document.getElementById('val-area');
+        const cF = document.getElementById('calc-f');
+        const cA = document.getElementById('calc-a');
+        const cP = document.getElementById('calc-p');
+        
+        const simBlock = document.getElementById('sim-block');
+        const blkMassLbl = document.getElementById('block-mass-label');
+        const pMeter = document.getElementById('pressure-meter');
+        const pStatus = document.getElementById('pressure-status');
+        const floorStress = document.getElementById('floor-stress');
+
+        function updateLab() {
+            let m = parseFloat(sMass.value);
+            let a = parseFloat(sArea.value);
+            let f = m * 10; // g=10
+            let p = f / a;
+
+            // Update Texts
+            vMass.innerText = m;
+            vArea.innerText = a.toFixed(1);
+            cF.innerText = f;
+            cA.innerText = a.toFixed(1);
+            cP.innerText = p.toFixed(1);
+            blkMassLbl.innerText = m + " kg";
+
+            // Visual Updates - Block Size (Width maps to Area, Height/Color to Mass)
+            // Area 0.1 to 5.0 -> Width 40px to 250px
+            let widthBase = 40 + (a / 5.0) * 210; 
+            simBlock.style.width = widthBase + "px";
+            floorStress.style.width = widthBase + "px";
+            
+            // Mass visual (darkens color and slightly changes height)
+            let heightBase = 50 + (m / 100) * 80;
+            simBlock.style.height = heightBase + "px";
+            
+            let colorIntensity = 800 + Math.floor(m/25)*100; 
+            if(colorIntensity>900) colorIntensity = 900;
+            simBlock.className = `bg-amber-${colorIntensity} rounded-t-sm shadow-md border-2 border-amber-900 transition-all duration-300 flex items-center justify-center relative z-10`;
+
+            // Pressure Meter Logic (Max pressure in this sim is 1000 Pa -> 100*10 / 0.1 = 10000 Pa)
+            // Let's cap visual meter at 2000 Pa for better sensitivity in normal ranges
+            let pPercent = (p / 2000) * 100;
+            if(pPercent > 100) pPercent = 100;
+            pMeter.style.width = pPercent + "%";
+
+            // Floor stress color & opacity based on pressure
+            floorStress.style.opacity = pPercent / 100;
+
+            if(p < 200) {
+                pMeter.className = "bg-green-500 h-2.5 rounded-full transition-all duration-300";
+                pStatus.innerText = "Sangat Aman"; pStatus.className = "text-xs font-bold text-green-600 uppercase";
+            } else if (p < 800) {
+                pMeter.className = "bg-yellow-500 h-2.5 rounded-full transition-all duration-300";
+                pStatus.innerText = "Peringatan"; pStatus.className = "text-xs font-bold text-yellow-600 uppercase";
+            } else {
+                pMeter.className = "bg-red-500 h-2.5 rounded-full transition-all duration-300";
+                pStatus.innerText = "BAHAYA PATAH!"; pStatus.className = "text-xs font-bold text-red-600 uppercase animate-pulse";
+            }
+        }
+
+        sMass.addEventListener('input', updateLab);
+        sArea.addEventListener('input', updateLab);
+
+        // --- GAME ---
+        let currentLevel = 1;
+        let gameScore = 0;
+        let forceConstant = 10; // Newton
+        let iceStrength = 0; // Pascal
+        
+        const elLevel = document.getElementById('game-level');
+        const elTarget = document.getElementById('game-target');
+        const elScore = document.getElementById('game-score');
+        const elForce = document.getElementById('game-force');
+        const elIce = document.getElementById('ice-block');
+        const elMsg = document.getElementById('game-message');
+        const gameControls = document.getElementById('game-controls');
+
+        function generateLevel() {
+            // Level logic: generate a target pressure that only 1 or 2 tools can break.
+            // Tools: Needle (A=0.01 -> P=F/0.01 = 100F), Hammer (A=0.1 -> P=10F), Stamp (A=1 -> P=F).
+            // Example F=10. P_needle = 1000, P_hammer = 100, P_stamp = 10.
+            
+            // Randomize force slightly per level
+            forceConstant = Math.floor(Math.random() * 5 + 5) * currentLevel; // 5 to 50 * level
+            if(forceConstant > 500) forceConstant = 500;
+            
+            let p1 = forceConstant / 0.01;
+            let p2 = forceConstant / 0.1;
+            let p3 = forceConstant / 1;
+
+            // Pick a random target strength that is beatable by at least one tool
+            // Type 0: Need stamp or hammer or needle (Target < P3) (rare)
+            // Type 1: Need hammer or needle (Target < P2)
+            // Type 2: Need needle only (Target < P1)
+            
+            let type = Math.floor(Math.random() * 3);
+            if(type === 0) {
+                iceStrength = Math.floor(p3 * 0.8);
+            } else if (type === 1) {
+                iceStrength = Math.floor(p2 * 0.8);
+                if(iceStrength <= p3) iceStrength = p3 + 10;
+            } else {
+                iceStrength = Math.floor(p1 * 0.8);
+                if(iceStrength <= p2) iceStrength = p2 + 50;
+            }
+
+            // Ensure not 0
+            if(iceStrength < 5) iceStrength = 5;
+
+            elLevel.innerText = currentLevel;
+            elTarget.innerText = iceStrength.toFixed(0);
+            elForce.innerText = forceConstant;
+            
+            elIce.className = "ice-block"; // reset visual
+            elIce.innerText = "ES PELINDUNG";
+            elMsg.classList.add('hidden');
+            gameControls.style.display = "flex";
+            
+            // Hide tools
+            document.querySelectorAll('.tool').forEach(t => {
+                t.style.display = 'none';
+                t.style.top = '-100px';
+            });
+        }
+
+        function playTurn(area, toolId) {
+            gameControls.style.display = "none";
+            
+            let toolEl = document.getElementById('tool-' + toolId);
+            toolEl.style.display = "block";
+            
+            // Animate Drop
+            setTimeout(() => {
+                toolEl.style.top = "150px"; // drop to ice
+                
+                setTimeout(() => {
+                    // Check logic
+                    let pApplied = forceConstant / area;
+                    
+                    if(pApplied >= iceStrength) {
+                        // Success
+                        elIce.className = "ice-block cracked";
+                        elIce.innerText = "HANCUR!";
+                        gameScore += 10 * currentLevel;
+                        elScore.innerText = gameScore;
+                        showMessage("BERHASIL! Tekanan yang dihasilkan ("+pApplied.toFixed(0)+" Pa) melampaui kekuatan es.", "bg-green-100 text-green-800 border-green-300");
+                        
+                        setTimeout(() => {
+                            currentLevel++;
+                            generateLevel();
+                        }, 2500);
+
+                    } else {
+                        // Fail
+                        toolEl.style.top = "120px"; // bounce back slightly
+                        toolEl.style.transform = "translateX(-50%) rotate(15deg)";
+                        showMessage("GAGAL! Tekanan ("+pApplied.toFixed(0)+" Pa) kurang kuat. Alat memantul!", "bg-red-100 text-red-800 border-red-300");
+                        
+                        setTimeout(() => {
+                            if(gameScore > 0) gameScore -= 5;
+                            elScore.innerText = gameScore;
+                            generateLevel(); // restart level
+                        }, 3000);
+                    }
+                }, 300); // Wait for drop animation
+            }, 50);
+        }
+
+        function showMessage(msg, classes) {
+            elMsg.innerText = msg;
+            elMsg.className = "mt-4 p-4 rounded-lg text-center font-bold text-sm md:text-lg border-2 " + classes;
+            elMsg.classList.remove('hidden');
+        }
+
+        function resetGame() {
+            currentLevel = 1;
+            gameScore = 0;
+            elScore.innerText = gameScore;
+            generateLevel();
+        }
+
+        // --- QUIZ (20 QUESTIONS) ---
+        const quizData = [
+            {q: "Apa yang dimaksud dengan tekanan pada zat padat?", options: ["Besarnya gaya per satuan volume", "Besarnya gaya per satuan luas permukaan", "Massa per satuan volume", "Luas permukaan per satuan gaya"], a: 1},
+            {q: "Rumus matematis untuk menghitung tekanan adalah...", options: ["P = F × A", "P = m × g", "P = F / A", "P = A / F"], a: 2},
+            {q: "Satuan Sistem Internasional (SI) untuk Tekanan adalah...", options: ["Joule (J)", "Newton (N)", "Pascal (Pa)", "Watt (W)"], a: 2},
+            {q: "Satu Pascal (Pa) setara dengan...", options: ["1 N/m²", "1 N.m", "1 kg/m³", "1 N/s"], a: 0},
+            {q: "Bagaimana hubungan antara Gaya (F) dengan Tekanan (P)?", options: ["Berbanding terbalik", "Berbanding lurus", "Tidak ada hubungan", "Kuadratik"], a: 1},
+            {q: "Jika kamu ingin mengecilkan tekanan, apa yang harus diperbesar?", options: ["Gaya dorong", "Luas bidang tekan (A)", "Massa benda", "Gravitasi"], a: 1},
+            {q: "Mengapa pisau yang tajam lebih mudah memotong daging?", options: ["Karena luas permukaannya besar", "Karena terbuat dari besi", "Karena ujungnya runcing sehingga luas bidangnya kecil (tekanan besar)", "Karena gaya tariknya kecil"], a: 2},
+            {q: "Sepatu mana yang memberikan tekanan paling besar ke lantai jika dipakai oleh orang yang sama?", options: ["Sepatu olahraga (Kets)", "Sepatu hak tinggi (High Heels)", "Sepatu boot datar", "Sepatu katak"], a: 1},
+            {q: "Kenapa bebek tidak mudah terperosok di lumpur dibandingkan ayam?", options: ["Ayam lebih berat dari bebek", "Bebek punya selaput kaki yang memperbesar luas permukaan alas", "Lumpur takut pada bebek", "Kaki ayam terlalu panjang"], a: 1},
+            {q: "Pondasi bangunan dibuat lebar di bagian bawah bertujuan untuk...", options: ["Menghemat semen", "Memperbesar tekanan ke tanah", "Memperkecil gaya gravitasi", "Memperkecil tekanan agar bangunan tidak ambles"], a: 3},
+            {q: "(Hitungan) Sebuah balok memberikan gaya 200 N pada lantai. Jika luas alas balok 4 m², berapa tekanannya?", options: ["50 Pa", "800 Pa", "204 Pa", "0.02 Pa"], a: 0},
+            {q: "(Hitungan) Kotak bermassa 10 kg berada di lantai (g=10 m/s²). Luas alasnya 0.5 m². Tekanannya adalah...", options: ["5 Pa", "20 Pa", "200 Pa", "500 Pa"], a: 2},
+            {q: "Dalam mekanika bahan (tingkat lanjut), istilah tekanan yang terjadi di dalam benda akibat gaya luar disebut...", options: ["Tegangan (Stress)", "Regangan (Strain)", "Kelenturan", "Viskositas"], a: 0},
+            {q: "Rasio perbandingan antara Tegangan dan Regangan pada benda padat disebut...", options: ["Modulus Young (Elastisitas)", "Hukum Newton", "Gaya Gesek", "Massa Jenis"], a: 0},
+            {q: "Apa yang terjadi jika sebuah material menerima 'Tegangan/Stress' melebihi kekuatan maksimalnya?", options: ["Material akan menjadi cair", "Material akan bertambah kuat", "Material akan patah / hancur", "Material akan memantul"], a: 2},
+            {q: "Dalam integrasi nilai Islam, ujian/masalah diibaratkan sebagai Gaya (F). Agar tekanan hidup (P) kecil, sikap kita sebaiknya...", options: ["Memperkecil kesabaran", "Memperluas kapasitas hati (A) dengan sabar dan ikhlas", "Melarikan diri", "Menambah gaya dari luar"], a: 1},
+            {q: "Firman Allah QS. Al-Baqarah 286 menyatakan 'Allah tidak membebani seseorang melainkan sesuai dengan...'", options: ["Harta bendanya", "Kesanggupannya (Kapasitasnya)", "Pangkatnya", "Umurnya"], a: 1},
+            {q: "Analogi fisika dari ayat tersebut (Q.S Al-Baqarah 286) adalah...", options: ["Allah membatasi Gaya agar tak melebihi Titik Patah material (batas kemampuan kita)", "Tekanan tidak ada di dunia", "Massa manusia selalu konstan", "Gravitasi tidak memihak"], a: 0},
+            {q: "Ban mobil off-road didesain bergerigi kasar dan sangat LEBAR. Secara fisika hal ini berguna untuk...", options: ["Meningkatkan kecepatan maksimum", "Memperkecil gaya berat mobil", "Memperkecil tekanan pada tanah berlumpur", "Mengurangi gesekan dengan aspal"], a: 2},
+            {q: "Atraksi sulap tidur di atas kasur paku tanpa terluka dapat dijelaskan secara fisika karena...", options: ["Pesulap memakai ilmu kebal", "Paku terbuat dari karet", "Banyaknya paku membuat luas total permukaan (A) besar sehingga tekanan (P) per paku menjadi kecil", "Gaya gravitasi menghilang di atas paku"], a: 2}
+        ];
+
+        let currentQIndex = 0;
+        let scoreCounter = 0;
+        let isAnswered = false;
+
+        const elQuizIntro = document.getElementById('quiz-intro');
+        const elQuizContainer = document.getElementById('quiz-container');
+        const elQuizResult = document.getElementById('quiz-result');
+        const elQCurrent = document.getElementById('q-current');
+        const elQScore = document.getElementById('q-score');
+        const elQText = document.getElementById('question-text');
+        const elOptions = document.getElementById('options-container');
+        const elFeedback = document.getElementById('feedback-container');
+        const btnNextQ = document.getElementById('btn-next-q');
+
+        function startQuiz() {
+            currentQIndex = 0;
+            scoreCounter = 0;
+            elQScore.innerText = "0";
+            elQuizIntro.classList.add('hidden');
+            elQuizResult.classList.add('hidden');
+            elQuizContainer.classList.remove('hidden');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            isAnswered = false;
+            btnNextQ.classList.add('hidden');
+            elFeedback.classList.add('hidden');
+            
+            let qData = quizData[currentQIndex];
+            elQCurrent.innerText = currentQIndex + 1;
+            elQText.innerText = `${currentQIndex + 1}. ${qData.q}`;
+            
+            elOptions.innerHTML = '';
+            qData.options.forEach((opt, idx) => {
+                let btn = document.createElement('button');
+                btn.className = "w-full text-left p-4 rounded-xl border-2 border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition font-medium text-gray-700 bg-white shadow-sm";
+                btn.innerHTML = `<span class="inline-block w-8 h-8 rounded-full bg-gray-100 text-center leading-8 mr-3 font-bold">${String.fromCharCode(65+idx)}</span> ${opt}`;
+                btn.onclick = () => checkAnswer(idx, btn);
+                elOptions.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selectedIndex, btnElement) {
+            if(isAnswered) return;
+            isAnswered = true;
+
+            let correctIndex = quizData[currentQIndex].a;
+            let buttons = elOptions.querySelectorAll('button');
+
+            if(selectedIndex === correctIndex) {
+                // Correct
+                btnElement.classList.replace('border-gray-200', 'border-green-500');
+                btnElement.classList.replace('hover:bg-blue-50', 'bg-green-100');
+                btnElement.classList.add('text-green-800');
+                scoreCounter += 5; // 20 questions * 5 = 100 max
+                elQScore.innerText = scoreCounter;
+                
+                elFeedback.innerText = "Jawaban Benar! Luar biasa.";
+                elFeedback.className = "mt-6 p-3 rounded-lg font-bold text-center bg-green-100 text-green-700 border border-green-300 animate-pulse";
+            } else {
+                // Wrong
+                btnElement.classList.replace('border-gray-200', 'border-red-500');
+                btnElement.classList.replace('hover:bg-blue-50', 'bg-red-100');
+                btnElement.classList.add('text-red-800');
+                
+                // Highlight correct
+                buttons[correctIndex].classList.replace('border-gray-200', 'border-green-500');
+                buttons[correctIndex].classList.add('bg-green-50');
+
+                elFeedback.innerText = "Jawaban Kurang Tepat.";
+                elFeedback.className = "mt-6 p-3 rounded-lg font-bold text-center bg-red-100 text-red-700 border border-red-300";
+            }
+            
+            elFeedback.classList.remove('hidden');
+            btnNextQ.classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            currentQIndex++;
+            if(currentQIndex < quizData.length) {
+                loadQuestion();
+            } else {
+                showResult();
+            }
+        }
+
+        function showResult() {
+            elQuizContainer.classList.add('hidden');
+            elQuizResult.classList.remove('hidden');
+            
+            document.getElementById('final-score').innerText = scoreCounter;
+            
+            let msg = "";
+            let icon = "";
+            if(scoreCounter >= 90) {
+                msg = "Sempurna! Kamu adalah Sang Fisikawan Sejati. Pemahaman materi dan hikmahmu luar biasa!";
+                icon = '<i class="fas fa-trophy text-yellow-400"></i>';
+            } else if (scoreCounter >= 70) {
+                msg = "Bagus sekali! Kamu sudah memahami konsep dasar dengan baik. Tinggal sedikit review lagi.";
+                icon = '<i class="fas fa-medal text-blue-400"></i>';
+            } else {
+                msg = "Jangan menyerah! Coba baca lagi bagian materi perlahan-lahan. Memahami fisika butuh proses (luas area kesabaran).";
+                icon = '<i class="fas fa-book-reader text-gray-500"></i>';
+            }
+            
+            document.getElementById('result-message').innerText = msg;
+            document.getElementById('result-icon').innerHTML = icon;
+        }
+
+        function resetQuiz() {
+            startQuiz();
+        }
+
+    </script>
+</body>
+</html>
